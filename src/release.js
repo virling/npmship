@@ -29,7 +29,9 @@ const attempt = (fn) => {
 function preflight(git, { fetch, test, branch }, deps, cwd) {
   if (fetch) git("fetch", "--quiet");
   if (git("status", "--porcelain")) throw new Error("working tree is not clean");
-  const head = git("for-each-ref", "--format=%(symref:short)", "refs/remotes/origin/HEAD").replace(/^origin\//, "");
+  const head =
+    git("for-each-ref", "--format=%(symref:short)", "refs/remotes/origin/HEAD").replace(/^origin\//, "") ||
+    git("ls-remote", "--symref", "origin", "HEAD").match(/^ref: refs\/heads\/(\S+)\s+HEAD/m)?.[1];
   if (!head) throw new Error("cannot tell the default branch (run: git remote set-head origin --auto)");
   if (branch !== head) throw new Error(`on ${branch}, not on the default branch ${head}`);
   const upstream = git("for-each-ref", "--format=%(upstream:short)", `refs/heads/${branch}`);

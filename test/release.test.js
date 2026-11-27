@@ -35,6 +35,12 @@ test("dry run prints the plan and changes nothing", () => {
   assert.equal(git(dir, "status", "--porcelain") + read(dir, "CHANGELOG.md") + read(dir, "package.json"), before);
   assert.equal(git(dir, "tag", "-l", "v1.1.0"), "");
 });
+test("dry run asks the remote when origin/HEAD is not set", () => {
+  const { dir } = repo();
+  git(dir, "remote", "set-head", "origin", "-d");
+  const out = execFileSync("node", [bin, "patch"], { cwd: dir, encoding: "utf8" });
+  assert.match(out, /Preflight \(without fetch and npm test\): ok/);
+});
 test("dry run reports problems and exits 1", () => {
   const { dir } = repo();
   fs.writeFileSync(path.join(dir, "dirty.txt"), "x");
