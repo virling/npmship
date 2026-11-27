@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { localDate, releaseChangelog } from "./changelog.js";
+import { collect } from "./draft.js";
 
 export function bump(current, kind) {
   if (/^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/.test(kind)) return kind;
@@ -65,6 +66,9 @@ export function plan(kind, { cwd, allowEmpty }, deps) {
     });
     if (error) problems.push(error);
   }
+  const empty = changelog ? !changelog.body : problems.some((x) => x.startsWith("## [Unreleased] in CHANGELOG.md is empty"));
+  const drafted = empty && collect(git);
+  const hint = drafted?.count ? `run \`npmship draft --write\` to draft it from ${drafted.count} commit${drafted.count === 1 ? "" : "s"} since ${drafted.tag || "the first commit"}` : null;
   const lock = fs.existsSync(path.join(cwd, "package-lock.json"));
   const stage = ["package.json", ...(lock ? ["package-lock.json"] : []), "CHANGELOG.md"];
   const push = [["git", "push", "origin", branch], ["git", "push", "origin", tag]];
@@ -78,7 +82,7 @@ export function plan(kind, { cwd, allowEmpty }, deps) {
     `push (only with --push): ${push.map((c) => c.join(" ")).join(" && ")}`,
     `verify ${version} --wait (only with --push)`,
   ];
-  return { name: pkg.name, from: pkg.version, version, tag, branch, sign, changelog, changelogPath, stage, push, tagArgs, steps, problems };
+  return { name: pkg.name, from: pkg.version, version, tag, branch, sign, changelog, changelogPath, stage, push, tagArgs, steps, problems, hint };
 }
 
 export function execute(p, { cwd }, deps) {

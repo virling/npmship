@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { defaults } from "../src/deps.js";
+import { draft, formatDraft } from "../src/draft.js";
 import { checkPreflight, execute, plan, pushRelease } from "../src/release.js";
 import { formatChecks, verify } from "../src/verify.js";
 
@@ -11,10 +12,12 @@ const HELP = `npmship: release an npm package from git and verify it landed
     --allow-empty-changelog           release even if [Unreleased] is empty
   npmship verify [X.Y.Z] [--wait]     check CI, npm registry, provenance, GitHub release, files
     --timeout <seconds>               how long --wait polls (default 1800)
+  npmship draft [--write]             draft [Unreleased] from commits since the last vX.Y.Z tag
+    --write                           add the entries to CHANGELOG.md
   --json                              machine-readable output
   --help`;
 
-const BOOLEAN_FLAGS = ["yes", "push", "allow-empty-changelog", "wait", "json", "help"];
+const BOOLEAN_FLAGS = ["yes", "write", "push", "allow-empty-changelog", "wait", "json", "help"];
 
 function parseArgs(argv) {
   const positional = [];
@@ -34,21 +37,36 @@ async function runVerify(version, flags, deps) {
   return result.ok ? 0 : 1;
 }
 
+function runDraft(flags, deps) {
+  const d = draft({ cwd: process.cwd(), write: flags.write }, deps);
+  const since = d.tag || "the first commit";
+  if (flags.json) deps.log(JSON.stringify(d, null, 2));
+  else if (!d.count) deps.log(`No commits to draft since ${since} (${d.skipped.length} skipped)`);
+  else {
+    deps.log(`${d.count} commit${d.count === 1 ? "" : "s"} since ${since} (${d.skipped.length} skipped)\n\n## [Unreleased]\n\n${formatDraft(d.groups)}`);
+    if (flags.write) deps.log(d.added ? `\nAdded ${d.added} entries to CHANGELOG.md` : "\nCHANGELOG.md already has all of them");
+    else deps.log("\nNothing changed. Re-run with --write to add these to CHANGELOG.md.");
+  }
+  return 0;
+}
+
 async function main(deps = defaults) {
   const { positional, flags } = parseArgs(process.argv.slice(2));
   const [command, arg] = positional;
   if (flags.help || !command) return deps.log(HELP);
   if (command === "verify") return runVerify(arg, flags, deps);
+  if (command === "draft") return runDraft(flags, deps);
   const cwd = process.cwd();
   const p = plan(command, { cwd, allowEmpty: flags["allow-empty-changelog"] }, deps);
   if (!flags.yes) {
     const preflight = checkPreflight(p, { cwd }, deps);
     const problems = [...p.problems, ...(preflight ? [`preflight: ${preflight}`] : [])];
-    if (flags.json) deps.log(JSON.stringify({ name: p.name, from: p.from, version: p.version, tag: p.tag, steps: p.steps, problems, dryRun: true }, null, 2));
+    if (flags.json) deps.log(JSON.stringify({ name: p.name, from: p.from, version: p.version, tag: p.tag, steps: p.steps, problems, hint: p.hint, dryRun: true }, null, 2));
     else {
       deps.log(`Release ${p.name} ${p.from} -> ${p.version} (tag ${p.tag}${p.sign ? ", signed" : ""})\n`);
       p.steps.forEach((s, i) => deps.log(`  ${i + 1}. ${s}`));
       if (p.changelog?.body) deps.log(`\nNew CHANGELOG section:\n\n## [${p.version}]\n${p.changelog.body}`);
+      if (p.hint) deps.log(`\nHint: [Unreleased] is empty; ${p.hint}`);
       deps.log(problems.length ? `\nProblems:\n${problems.map((x) => `  - ${x}`).join("\n")}` : "\nPreflight (without fetch and npm test): ok");
       deps.log("\nDry run: nothing changed. Re-run with --yes to release.");
     }

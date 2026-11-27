@@ -5,6 +5,7 @@ Release an npm package from a git repo, then check that the release actually lan
 - **Dry run by default.** `npmship minor` prints the plan and changes nothing. `--yes` does it.
 - **Preflight.** Clean tree, default branch, not behind upstream, `npm test` passes.
 - **Keep a Changelog.** Moves `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD` and updates the compare links.
+- **Drafts the changelog.** `npmship draft` turns the commit subjects since the last release tag into `[Unreleased]` entries.
 - **Your version scripts run.** Uses `npm version X.Y.Z --no-git-tag-version`, so a `version` script that syncs other manifests still works.
 - **Verifies the release.** The tag's CI run passed, the version is on registry.npmjs.org (fetched directly, not through `npm view`'s cache), `latest` points at it, provenance is there, the GitHub release exists, and the tarball has every file `files` should include.
 
@@ -21,6 +22,8 @@ Release an npm package from a git repo, then check that the release actually lan
 npx @virling/npmship minor              # print the plan
 npx @virling/npmship minor --yes        # preflight, CHANGELOG, npm version, commit "Release X.Y.Z", tag vX.Y.Z
 npx @virling/npmship minor --yes --push # also push the branch and tag, then verify --wait
+npx @virling/npmship draft              # print [Unreleased] entries drafted from commits
+npx @virling/npmship draft --write      # add them to CHANGELOG.md
 npx @virling/npmship verify             # verify the version in package.json
 npx @virling/npmship verify 1.2.0 --wait --timeout 900
 ```
@@ -29,11 +32,30 @@ npx @virling/npmship verify 1.2.0 --wait --timeout 900
 |---|---|
 | `--yes` | Make the release. Without it nothing changes. |
 | `--push` | Push the branch and tag, then wait for CI and npm. Without it the push commands are printed. |
+| `--write` | With `draft`: add the drafted entries to CHANGELOG.md. Without it nothing changes. |
 | `--allow-empty-changelog` | Release even if `[Unreleased]` has no entries. |
 | `--wait` | Poll until CI finishes and the version is on npm (every 15 s, default timeout 1800 s). |
 | `--json` | Machine-readable output. |
 
 The tag is annotated, and signed with `-s` when `tag.gpgSign` or `commit.gpgsign` is true. `verify` exits 1 if any check fails. A version that is not `latest` and a package that never had provenance are warnings, not failures.
+
+## Drafting the changelog
+
+`npmship draft` reads `git log <tag>..HEAD --no-merges`, where `<tag>` is the highest `vX.Y.Z` tag reachable from HEAD (all commits if there is none). It skips:
+
+- release commits (subject starts with `Release ` and a digit)
+- commits whose changed files are all under `test/` or `.github/`, or end in `.md`
+
+Each remaining subject becomes a bullet, unchanged, grouped by its first word:
+
+| First word | Section |
+|---|---|
+| Add, Ship, Support, Introduce, Allow | Added |
+| Fix, Close, Stop, Handle, Prevent | Fixed |
+| Remove, Drop, Delete | Removed |
+| anything else | Changed |
+
+`--write` puts the bullets under `## [Unreleased]`, inside an existing `### Added` (etc.) subsection when there is one, and skips any bullet already in the section, so running it twice is safe. It refuses if CHANGELOG.md has no `## [Unreleased]` heading. Edit the result before releasing; commit subjects are a draft, not release notes. `--json` prints the grouped and skipped commits. When `[Unreleased]` is empty, the release dry run says how many commits `draft` would use.
 
 ## Compared with release-it / semantic-release
 

@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `npmship draft [--write]`: drafts `[Unreleased]` entries from commit subjects since the last `vX.Y.Z` tag, grouped into Added, Changed, Removed and Fixed, skipping release commits and commits that only touch tests, CI or Markdown. `--write` merges them into CHANGELOG.md without duplicates.
+- The release dry run hints at `npmship draft --write` when `[Unreleased]` is empty.
+
 ## [0.1.0] - 2026-11-27
 
 ### Added
