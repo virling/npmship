@@ -39,6 +39,13 @@ The tag is annotated, and signed with `-s` when `tag.gpgSign` or `commit.gpgsign
 
 release-it and semantic-release do much more (plugins, commit-message versioning, publishing from your machine or CI). npmship only does the bump, changelog move and tag in the Keep a Changelog style, leaves publishing to your CI, and spends its effort on checking afterwards that CI passed and the package on npm is what you expect. If you already use one of them, `npmship verify` still works after it.
 
+## More tools from Virling
+
+- [agentmem](https://github.com/virling/agentmem): project memory for AI coding agents, shared across Claude Code, Cursor, Codex and other MCP clients.
+- [ccdoctor](https://github.com/virling/ccdoctor): checks your Claude Code setup: hooks, MCP servers and plugins that are registered but not working.
+- [ciwhy](https://github.com/virling/ciwhy): finds the real error in a failed GitHub Actions run and tells you if it is flaky.
+- [subagents](https://github.com/virling/subagents): reviews what Claude Code subagents did in a session and flags repeated or wasted work.
+
 ## License
 
 [PolyForm Noncommercial 1.0.0](LICENSE).
