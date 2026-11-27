@@ -1,0 +1,42 @@
+{
+  "name": "@virling/npmship",
+  "version": "0.0.0",
+  "description": "Release an npm package from git and verify it actually landed",
+  "type": "module",
+  "bin": {
+    "npmship": "bin/npmship.js"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "keywords": [
+    "npm",
+    "release",
+    "publish",
+    "changelog",
+    "provenance",
+    "github-actions"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/virling/npmship.git"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "homepage": "https://github.com/virling/npmship#readme",
+  "bugs": {
+    "url": "https://github.com/virling/npmship/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
