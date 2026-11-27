@@ -44,7 +44,7 @@ function runDraft(flags, deps) {
   else if (!d.count) deps.log(`No commits to draft since ${since} (${d.skipped.length} skipped)`);
   else {
     deps.log(`${d.count} commit${d.count === 1 ? "" : "s"} since ${since} (${d.skipped.length} skipped)\n\n## [Unreleased]\n\n${formatDraft(d.groups)}`);
-    if (flags.write) deps.log(d.added ? `\nAdded ${d.added} entries to CHANGELOG.md` : "\nCHANGELOG.md already has all of them");
+    if (flags.write) deps.log(d.added ? `\nAdded ${d.added} ${d.added === 1 ? "entry" : "entries"} to CHANGELOG.md` : "\nCHANGELOG.md already has all of them");
     else deps.log("\nNothing changed. Re-run with --write to add these to CHANGELOG.md.");
   }
   return 0;
