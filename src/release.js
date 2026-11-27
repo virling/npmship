@@ -69,13 +69,14 @@ export function plan(kind, { cwd, allowEmpty }, deps) {
   const empty = changelog ? !changelog.body : problems.some((x) => x.startsWith("## [Unreleased] in CHANGELOG.md is empty"));
   const drafted = empty && collect(git);
   const hint = drafted?.count ? `run \`npmship draft --write\` to draft it from ${drafted.count} commit${drafted.count === 1 ? "" : "s"} since ${drafted.tag || "the first commit"}` : null;
+  const entries = changelog?.body ? changelog.body.split("\n").filter((l) => l.startsWith("- ")).length : 0;
   const lock = fs.existsSync(path.join(cwd, "package-lock.json"));
   const stage = ["package.json", ...(lock ? ["package-lock.json"] : []), "CHANGELOG.md"];
   const push = [["git", "push", "origin", branch], ["git", "push", "origin", tag]];
   const tagArgs = ["tag", "-a", ...(sign ? ["-s"] : []), tag, "-m", tag];
   const steps = [
     `preflight: git fetch, clean tree, on the default branch, not behind upstream, npm test`,
-    `CHANGELOG.md: move [Unreleased] (${changelog?.body ? changelog.body.split("\n").filter((l) => l.startsWith("- ")).length + " entries" : "empty"}) to [${version}] - ${localDate(deps.now())}, update compare links`,
+    `CHANGELOG.md: move [Unreleased] (${changelog?.body ? `${entries} ${entries === 1 ? "entry" : "entries"}` : "empty"}) to [${version}] - ${localDate(deps.now())}, update compare links`,
     `npm version ${version} --no-git-tag-version, then git add ${stage.join(" ")} (plus anything the version script stages)`,
     `git commit -m "Release ${version}"`,
     `git ${tagArgs.join(" ")}`,
