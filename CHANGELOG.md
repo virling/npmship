@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- `draft --write` and the release plan say "1 entry" instead of "1 entries".
+
 ## [0.2.0] - 2026-11-27
 
 ### Added
