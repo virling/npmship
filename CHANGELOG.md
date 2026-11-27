@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- The dry run no longer reports "cannot tell the default branch" in repos without `origin/HEAD` (created with `git init` instead of `git clone`). It asks the remote instead.
+
 ## [0.2.1] - 2026-11-27
 
 ### Fixed
