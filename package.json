@@ -1,6 +1,6 @@
 {
   "name": "@virling/npmship",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Release an npm package from git and verify it actually landed",
   "type": "module",
   "bin": {
