@@ -112,3 +112,15 @@ test("--allow-empty-changelog releases with an empty section", () => {
   assert.equal(git(dir, "describe", "--tags"), "v1.0.1");
   assert.match(read(dir, "CHANGELOG.md"), /## \[1\.0\.1\] - 2026-03-04\n\n\[Unreleased\]/);
 });
+test("a failure mid-release names the undo command", () => {
+  const { dir } = repo();
+  const hooks = path.join(dir, "..", "hooks");
+  fs.mkdirSync(hooks);
+  fs.writeFileSync(path.join(hooks, "pre-commit"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
+  const head = git(dir, "rev-parse", "HEAD");
+  const deps = fakeDeps();
+  assert.throws(() => execute(plan("patch", { cwd: dir }, deps), { cwd: dir }, deps), new RegExp(`git commit[\\s\\S]*\\nUndo with: git reset --hard ${head}$`));
+  assert.notEqual(git(dir, "status", "--porcelain"), "");
+  git(dir, "reset", "-q", "--hard", head);
+  assert.equal(git(dir, "status", "--porcelain"), "");
+});

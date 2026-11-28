@@ -92,11 +92,16 @@ export function execute(p, { cwd }, deps) {
   const git = (...args) => deps.run("git", args, cwd);
   if (p.problems.length) throw new Error(p.problems.join("\n"));
   preflight(git, { fetch: true, test: true, branch: p.branch }, deps, cwd);
-  fs.writeFileSync(p.changelogPath, p.changelog.text);
-  deps.run("npm", ["version", p.version, "--no-git-tag-version"], cwd);
-  git("add", ...p.stage);
-  git("commit", "-m", `Release ${p.version}`);
-  git(...p.tagArgs);
+  const head = git("rev-parse", "HEAD");
+  try {
+    fs.writeFileSync(p.changelogPath, p.changelog.text);
+    deps.run("npm", ["version", p.version, "--no-git-tag-version"], cwd);
+    git("add", ...p.stage);
+    git("commit", "-m", `Release ${p.version}`);
+    git(...p.tagArgs);
+  } catch (e) {
+    throw new Error(`${e.message}\nUndo with: git reset --hard ${head}`);
+  }
 }
 
 export function checkPreflight(p, { cwd }, deps) {
