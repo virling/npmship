@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- A release that fails partway prints the `git reset --hard` command that undoes it.
+- `package-lock.json` is staged only when git tracks it, so a gitignored lockfile no longer breaks the release.
+- A version that is not above the current one is refused in the plan.
+- The branch and tag are pushed in one atomic push, with the command to retry on failure.
+- `--timeout` must be a positive number of seconds.
+- A failing `npm test` shows stderr as well as stdout.
+- `npmship init` workflows limit the test token to read access and publish prereleases under the `next` npm tag.
+
 ## [0.3.0] - 2026-11-28
 
 ### Added
