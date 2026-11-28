@@ -58,7 +58,7 @@ function preflight(git, { fetch, test, branch }, deps, cwd) {
     try {
       deps.run("npm", ["test"], cwd);
     } catch (e) {
-      throw new Error(`npm test failed\n${String(e.stdout || "").trim().split("\n").slice(-20).join("\n")}`);
+      throw new Error(`npm test failed\n${`${e.stdout || ""}${e.stderr || ""}`.trim().split("\n").slice(-20).join("\n")}`);
     }
   }
 }

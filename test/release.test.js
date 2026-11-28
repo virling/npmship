@@ -111,6 +111,7 @@ refuses("behind upstream", { before: (dir) => {
   git(dir, "reset", "-q", "--hard", "HEAD~1");
 } }, /main is 1 commit\(s\) behind origin\/main/);
 refuses("failing tests", { repo: { scripts: { test: "node -e \"console.log('boom'); process.exit(1)\"" } } }, /npm test failed\n[\s\S]*boom/);
+refuses("failing tests that report on stderr", { repo: { scripts: { test: "node -e \"console.error('bang'); process.exit(1)\"" } } }, /npm test failed\n[\s\S]*bang/);
 refuses("empty Unreleased", { repo: { files: { "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n" } } }, /empty/);
 refuses("equal version", {}, /1\.0\.0 is not greater than the current version 1\.0\.0/, "1.0.0");
 refuses("lower version", {}, /0\.9\.0 is not greater than the current version 1\.0\.0/, "0.9.0");
