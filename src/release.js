@@ -15,6 +15,22 @@ export function bump(current, kind) {
   throw new Error(`expected patch, minor, major or X.Y.Z, got ${kind}`);
 }
 
+export function compare(a, b) {
+  const [x, y] = [a, b].map((v) => v.match(/^(\d+)\.(\d+)\.(\d+)(?:-([^+]+))?/));
+  for (let i = 1; i <= 3; i++) if (x[i] !== y[i]) return Number(x[i]) - Number(y[i]);
+  if (!x[4] || !y[4]) return !x[4] - !y[4];
+  const [p, q] = [x[4].split("."), y[4].split(".")];
+  for (let i = 0; i < Math.max(p.length, q.length); i++) {
+    if (p[i] === undefined || q[i] === undefined) return p[i] === undefined ? -1 : 1;
+    if (p[i] === q[i]) continue;
+    const [m, n] = [/^\d+$/.test(p[i]), /^\d+$/.test(q[i])];
+    if (m && n) return Number(p[i]) - Number(q[i]);
+    if (m || n) return m ? -1 : 1;
+    return p[i] < q[i] ? -1 : 1;
+  }
+  return 0;
+}
+
 export const webUrl = (url) => url.replace(/^git\+/, "").replace(/^git@([^:]+):/, "https://$1/").replace(/^ssh:\/\/git@/, "https://").replace(/\.git$/, "");
 
 const attempt = (fn) => {
@@ -60,6 +76,7 @@ export function plan(kind, { cwd, allowEmpty }, deps) {
   const changelogPath = path.join(cwd, "CHANGELOG.md");
   let changelog;
   const problems = [];
+  if (compare(version, pkg.version) <= 0) problems.push(`${version} is not greater than the current version ${pkg.version}`);
   if (git("tag", "-l", tag)) problems.push(`tag ${tag} already exists`);
   if (!fs.existsSync(changelogPath)) problems.push("no CHANGELOG.md");
   else {

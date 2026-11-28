@@ -3,7 +3,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
-import { bump, execute, plan, pushRelease, webUrl } from "../src/release.js";
+import { bump, compare, execute, plan, pushRelease, webUrl } from "../src/release.js";
 import { fakeDeps, git, repo } from "./helpers.js";
 
 const bin = new URL("../bin/npmship.js", import.meta.url).pathname;
@@ -18,6 +18,14 @@ test("bump", () => {
   assert.equal(bump("1.3.0-rc.1", "minor"), "1.3.0");
   assert.equal(bump("1.3.1-rc.1", "patch"), "1.3.1");
   assert.throws(() => bump("1.2.3", "huge"), /expected patch/);
+});
+test("compare orders versions by semver precedence", () => {
+  const order = ["1.0.0-alpha", "1.0.0-alpha.1", "1.0.0-alpha.beta", "1.0.0-beta", "1.0.0-beta.2", "1.0.0-beta.11", "1.0.0-rc.1", "1.0.0", "1.0.1", "1.2.0", "1.10.0", "2.0.0"];
+  for (let i = 1; i < order.length; i++) {
+    assert.ok(compare(order[i - 1], order[i]) < 0, `${order[i - 1]} < ${order[i]}`);
+    assert.ok(compare(order[i], order[i - 1]) > 0, `${order[i]} > ${order[i - 1]}`);
+  }
+  assert.equal(compare("1.0.0-rc.1", "1.0.0-rc.1"), 0);
 });
 test("webUrl normalizes git remotes", () => {
   assert.equal(webUrl("git@github.com:acme/widget.git"), "https://github.com/acme/widget");
@@ -104,6 +112,13 @@ refuses("behind upstream", { before: (dir) => {
 } }, /main is 1 commit\(s\) behind origin\/main/);
 refuses("failing tests", { repo: { scripts: { test: "node -e \"console.log('boom'); process.exit(1)\"" } } }, /npm test failed\n[\s\S]*boom/);
 refuses("empty Unreleased", { repo: { files: { "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n" } } }, /empty/);
+refuses("equal version", {}, /1\.0\.0 is not greater than the current version 1\.0\.0/, "1.0.0");
+refuses("lower version", {}, /0\.9\.0 is not greater than the current version 1\.0\.0/, "0.9.0");
+refuses("lower prerelease", { repo: { version: "2.0.0-rc.2" } }, /2\.0\.0-rc\.1 is not greater/, "2.0.0-rc.1");
+test("first release of the next version from an untagged package.json", () => {
+  const { dir } = repo({ tag: false, version: "0.1.0", files: { "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n- First.\n" } });
+  assert.deepEqual(plan("1.0.0", { cwd: dir }, fakeDeps()).problems, []);
+});
 refuses("existing tag", { before: (dir) => git(dir, "tag", "v1.0.1") }, /tag v1\.0\.1 already exists/);
 test("--allow-empty-changelog releases with an empty section", () => {
   const { dir } = repo({ files: { "CHANGELOG.md": "# Changelog\n\n## [Unreleased]\n\n[Unreleased]: https://github.com/acme/widget/compare/v1.0.0...HEAD\n" } });
