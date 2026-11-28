@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- `npmship init` workflows pin `actions/checkout` and `actions/setup-node` to commit SHAs.
+
 ## [0.3.1] - 2026-11-28
 
 ### Fixed
