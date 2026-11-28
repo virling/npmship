@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-28
+
 ### Fixed
 
 - A release that fails partway prints the `git reset --hard` command that undoes it.
@@ -46,7 +48,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - `npmship <patch|minor|major|X.Y.Z>`: dry-run release plan by default; `--yes` runs preflight, moves the CHANGELOG Unreleased section, runs `npm version`, commits and tags; `--push` pushes and verifies.
 - `npmship verify [X.Y.Z] [--wait]`: checks the tag's GitHub Actions run, the npm registry, `latest`, provenance, the GitHub release and the published file list.
 
-[Unreleased]: https://github.com/virling/npmship/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/virling/npmship/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/virling/npmship/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/virling/npmship/compare/v0.2.2...v0.3.0
 [0.2.2]: https://github.com/virling/npmship/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/virling/npmship/compare/v0.2.0...v0.2.1
