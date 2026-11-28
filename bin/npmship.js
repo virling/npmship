@@ -55,7 +55,10 @@ function runDraft(flags, deps) {
 
 function runInit(flags, deps) {
   const r = init({ cwd: process.cwd(), write: flags.write }, deps);
-  if (flags.json) return deps.log(JSON.stringify(r, null, 2)), 0;
+  if (flags.json) {
+    deps.log(JSON.stringify(r, null, 2));
+    return 0;
+  }
   const created = r.files.filter((f) => !f.exists);
   deps.log(r.files.map((f) => `${f.exists ? "exists " : flags.write ? "created" : "create "} ${f.file}`).join("\n"));
   if (r.action) deps.log("\naction.yml found: release.yml also moves the major tag (v1, v2) used by the GitHub Action.");
