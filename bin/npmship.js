@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { defaults } from "../src/deps.js";
 import { draft, formatDraft } from "../src/draft.js";
+import { init } from "../src/init.js";
 import { checkPreflight, execute, plan, pushRelease } from "../src/release.js";
 import { formatChecks, verify } from "../src/verify.js";
 
@@ -14,6 +15,8 @@ const HELP = `npmship: release an npm package from git and verify it landed
     --timeout <seconds>               how long --wait polls (default 1800)
   npmship draft [--write]             draft [Unreleased] from commits since the last vX.Y.Z tag
     --write                           add the entries to CHANGELOG.md
+  npmship init [--write]              print the CI and release setup for a new package
+    --write                           create test.yml, release.yml and CHANGELOG.md (existing files are kept)
   --json                              machine-readable output
   --help`;
 
@@ -50,12 +53,24 @@ function runDraft(flags, deps) {
   return 0;
 }
 
+function runInit(flags, deps) {
+  const r = init({ cwd: process.cwd(), write: flags.write }, deps);
+  if (flags.json) return deps.log(JSON.stringify(r, null, 2)), 0;
+  const created = r.files.filter((f) => !f.exists);
+  deps.log(r.files.map((f) => `${f.exists ? "exists " : flags.write ? "created" : "create "} ${f.file}`).join("\n"));
+  if (r.action) deps.log("\naction.yml found: release.yml also moves the major tag (v1, v2) used by the GitHub Action.");
+  if (created.length && !flags.write) deps.log("\nNothing changed. Re-run with --write to create them.");
+  deps.log(`\nThen enable npm trusted publishing so CI publishes with provenance. The package must already be on npm, so publish the first version yourself (npm publish --access public), then run:\n  ${r.trust}`);
+  return 0;
+}
+
 async function main(deps = defaults) {
   const { positional, flags } = parseArgs(process.argv.slice(2));
   const [command, arg] = positional;
   if (flags.help || !command) return deps.log(HELP);
   if (command === "verify") return runVerify(arg, flags, deps);
   if (command === "draft") return runDraft(flags, deps);
+  if (command === "init") return runInit(flags, deps);
   const cwd = process.cwd();
   const p = plan(command, { cwd, allowEmpty: flags["allow-empty-changelog"] }, deps);
   if (!flags.yes) {

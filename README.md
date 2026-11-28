@@ -57,6 +57,16 @@ Each remaining subject becomes a bullet, unchanged, grouped by its first word:
 
 `--write` puts the bullets under `## [Unreleased]`, inside an existing `### Added` (etc.) subsection when there is one, and skips any bullet already in the section, so running it twice is safe. It refuses if CHANGELOG.md has no `## [Unreleased]` heading. Edit the result before releasing; commit subjects are a draft, not release notes. `--json` prints the grouped and skipped commits. When `[Unreleased]` is empty, the release dry run says how many commits `draft` would use.
 
+## Setting up CI and release
+
+`npmship init` prints what it would add to a new package, and `npmship init --write` creates it. Existing files are kept.
+
+- `.github/workflows/test.yml`: `npm test` on Ubuntu and macOS, for Node 20, 22 and 24 (versions below `engines.node` are left out).
+- `.github/workflows/release.yml`: on a `vX.Y.Z` tag, checks the tag matches `package.json`, runs the tests, publishes to npm with provenance, and creates the GitHub release from CHANGELOG.md. When the package has an `action.yml`, it also moves the major tag (`v1`) to the latest release.
+- `CHANGELOG.md` with an empty `[Unreleased]` section.
+
+It then prints the `npm trust github ...` command that lets the release workflow publish without a token. npm only accepts it for a package that already exists, so publish the first version yourself.
+
 ## Compared with release-it / semantic-release
 
 release-it and semantic-release do much more (plugins, commit-message versioning, publishing from your machine or CI). npmship only does the bump, changelog move and tag in the Keep a Changelog style, leaves publishing to your CI, and spends its effort on checking afterwards that CI passed and the package on npm is what you expect. If you already use one of them, `npmship verify` still works after it.
