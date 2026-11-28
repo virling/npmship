@@ -124,3 +124,11 @@ test("a failure mid-release names the undo command", () => {
   git(dir, "reset", "-q", "--hard", head);
   assert.equal(git(dir, "status", "--porcelain"), "");
 });
+test("a gitignored package-lock.json is not staged", () => {
+  const { dir } = repo({ files: { ".gitignore": "node_modules/\npackage-lock.json\n", "package-lock.json": "{}\n" } });
+  const deps = fakeDeps();
+  const p = plan("patch", { cwd: dir }, deps);
+  assert.deepEqual(p.stage, ["package.json", "CHANGELOG.md"]);
+  execute(p, { cwd: dir }, deps);
+  assert.equal(git(dir, "describe", "--tags"), "v1.0.1");
+});

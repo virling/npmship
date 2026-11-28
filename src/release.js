@@ -72,7 +72,7 @@ export function plan(kind, { cwd, allowEmpty }, deps) {
   const drafted = empty && collect(git);
   const hint = drafted?.count ? `run \`npmship draft --write\` to draft it from ${drafted.count} commit${drafted.count === 1 ? "" : "s"} since ${drafted.tag || "the first commit"}` : null;
   const entries = changelog?.body ? changelog.body.split("\n").filter((l) => l.startsWith("- ")).length : 0;
-  const lock = fs.existsSync(path.join(cwd, "package-lock.json"));
+  const lock = git("ls-files", "package-lock.json");
   const stage = ["package.json", ...(lock ? ["package-lock.json"] : []), "CHANGELOG.md"];
   const push = [["git", "push", "origin", branch], ["git", "push", "origin", tag]];
   const tagArgs = ["tag", "-a", ...(sign ? ["-s"] : []), tag, "-m", tag];
