@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- `npmship init [--write]`: creates `.github/workflows/test.yml`, `.github/workflows/release.yml` (trusted publishing with provenance, GitHub release from CHANGELOG, major tag move when the package has an `action.yml`) and `CHANGELOG.md`, keeping existing files, and prints the `npm trust github` command.
+
 ## [0.2.2] - 2026-11-28
 
 ### Fixed
