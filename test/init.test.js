@@ -55,3 +55,11 @@ test("init without a remote or action leaves placeholders and skips the major ta
   assert.equal(fs.readFileSync(path.join(dir, "CHANGELOG.md"), "utf8"), CHANGELOG);
   assert.doesNotMatch(fs.readFileSync(path.join(dir, ".github/workflows/release.yml"), "utf8"), /major tag/);
 });
+
+test("init writes the same release.yml this repo uses, publishing prereleases under next", () => {
+  const dir = pkgDir({ name: "widget", engines: { node: ">=20" } });
+  run(dir, "--write");
+  const release = fs.readFileSync(path.join(dir, ".github/workflows/release.yml"), "utf8");
+  assert.match(release, /elif \[\[ "\$TAG" == \*-\* \]\]; then\n\s+npm publish --provenance --access public --tag next/);
+  assert.equal(release, fs.readFileSync(new URL("../.github/workflows/release.yml", import.meta.url), "utf8"));
+});
