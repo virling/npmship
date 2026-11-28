@@ -15,7 +15,7 @@ export function section(subject) {
   return Object.keys(WORDS).find((k) => WORDS[k].includes(word)) || "Changed";
 }
 
-export function lastTag(git) {
+function lastTag(git) {
   const v = (t) => t.slice(1).split(".").map(Number);
   const tags = git("tag", "--merged", "HEAD", "--list", "v*").split("\n").filter((t) => /^v\d+\.\d+\.\d+$/.test(t));
   return tags.sort((a, b) => v(a).reduce((d, x, i) => d || x - v(b)[i], 0)).at(-1) || null;

@@ -4,7 +4,7 @@ import { webUrl } from "./release.js";
 
 const NODE_VERSIONS = [20, 22, 24];
 
-export const testWorkflow = (nodes) => `name: test
+const testWorkflow = (nodes) => `name: test
 
 on:
   push:
@@ -39,7 +39,7 @@ const MAJOR_TAG = `      - name: Move the major tag used by the GitHub Action
           fi
 `;
 
-export const releaseWorkflow = (action) => `name: release
+const releaseWorkflow = (action) => `name: release
 
 on:
   push:
