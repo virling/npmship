@@ -32,9 +32,10 @@ npx @virling/npmship verify 1.2.0 --wait --timeout 900
 |---|---|
 | `--yes` | Make the release. Without it nothing changes. |
 | `--push` | Push the branch and tag, then wait for CI and npm. Without it the push commands are printed. |
-| `--write` | With `draft`: add the drafted entries to CHANGELOG.md. Without it nothing changes. |
+| `--write` | With `draft`: add the drafted entries to CHANGELOG.md. With `init`: create the missing workflows and CHANGELOG.md. Without it nothing changes. |
 | `--allow-empty-changelog` | Release even if `[Unreleased]` has no entries. |
 | `--wait` | Poll until CI finishes and the version is on npm (every 15 s, default timeout 1800 s). |
+| `--timeout <seconds>` | How long `--wait` polls before failing (default 1800). |
 | `--json` | Machine-readable output. |
 
 The tag is annotated, and signed with `-s` when `tag.gpgSign` or `commit.gpgsign` is true. `verify` exits 1 if any check fails. A version that is not `latest` and a package that never had provenance are warnings, not failures.
