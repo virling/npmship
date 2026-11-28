@@ -147,3 +147,17 @@ test("a gitignored package-lock.json is not staged", () => {
   execute(p, { cwd: dir }, deps);
   assert.equal(git(dir, "describe", "--tags"), "v1.0.1");
 });
+test("pushes the branch and tag atomically and prints the retry command on failure", () => {
+  const { dir, remote } = repo();
+  const deps = fakeDeps();
+  const p = plan("patch", { cwd: dir }, deps);
+  assert.deepEqual(p.push, [["git", "push", "--atomic", "origin", "main", "v1.0.1"]]);
+  execute(p, { cwd: dir }, deps);
+  const other = path.join(dir, "..", "other");
+  git(dir, "clone", "-q", remote, other);
+  git(other, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-q", "--allow-empty", "-m", "Elsewhere");
+  git(other, "push", "-q", "origin", "main");
+  assert.throws(() => pushRelease(p, { cwd: dir }, deps), /\nRetry with: git push --atomic origin main v1\.0\.1$/);
+  assert.equal(git(remote, "tag", "-l", "v1.0.1"), "");
+  assert.equal(git(remote, "log", "-1", "--format=%s", "main"), "Elsewhere");
+});

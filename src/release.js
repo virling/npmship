@@ -91,7 +91,7 @@ export function plan(kind, { cwd, allowEmpty }, deps) {
   const entries = changelog?.body ? changelog.body.split("\n").filter((l) => l.startsWith("- ")).length : 0;
   const lock = git("ls-files", "package-lock.json");
   const stage = ["package.json", ...(lock ? ["package-lock.json"] : []), "CHANGELOG.md"];
-  const push = [["git", "push", "origin", branch], ["git", "push", "origin", tag]];
+  const push = [["git", "push", "--atomic", "origin", branch, tag]];
   const tagArgs = ["tag", "-a", ...(sign ? ["-s"] : []), tag, "-m", tag];
   const steps = [
     `preflight: git fetch, clean tree, on the default branch, not behind upstream, npm test`,
@@ -126,5 +126,11 @@ export function checkPreflight(p, { cwd }, deps) {
 }
 
 export function pushRelease(p, { cwd }, deps) {
-  for (const [cmd, ...args] of p.push) deps.run(cmd, args, cwd);
+  for (const [cmd, ...args] of p.push) {
+    try {
+      deps.run(cmd, args, cwd);
+    } catch (e) {
+      throw new Error(`${e.message}\nRetry with: ${[cmd, ...args].join(" ")}`);
+    }
+  }
 }
