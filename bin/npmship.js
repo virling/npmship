@@ -68,6 +68,7 @@ async function main(deps = defaults) {
   const { positional, flags } = parseArgs(process.argv.slice(2));
   const [command, arg] = positional;
   if (flags.help || !command) return deps.log(HELP);
+  if (flags.timeout !== undefined && !(Number(flags.timeout) > 0 && Number(flags.timeout) < Infinity)) throw new Error(`--timeout expects a positive number of seconds, got ${flags.timeout}`);
   if (command === "verify") return runVerify(arg, flags, deps);
   if (command === "draft") return runDraft(flags, deps);
   if (command === "init") return runInit(flags, deps);

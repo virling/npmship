@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 import { bump, compare, execute, plan, pushRelease, webUrl } from "../src/release.js";
-import { fakeDeps, git, repo } from "./helpers.js";
+import { fakeDeps, git, repo, tmp } from "./helpers.js";
 
 const bin = new URL("../bin/npmship.js", import.meta.url).pathname;
 const read = (dir, file) => fs.readFileSync(path.join(dir, file), "utf8");
@@ -160,4 +160,11 @@ test("pushes the branch and tag atomically and prints the retry command on failu
   assert.throws(() => pushRelease(p, { cwd: dir }, deps), /\nRetry with: git push --atomic origin main v1\.0\.1$/);
   assert.equal(git(remote, "tag", "-l", "v1.0.1"), "");
   assert.equal(git(remote, "log", "-1", "--format=%s", "main"), "Elsewhere");
+});
+test("--timeout rejects a value that is not a positive number of seconds", () => {
+  for (const value of ["abc", "15m", "0", "-5"]) {
+    const res = spawnSync("node", [bin, "verify", "--wait", "--timeout", value], { cwd: tmp(), encoding: "utf8" });
+    assert.equal(res.status, 1);
+    assert.equal(res.stderr, `npmship: --timeout expects a positive number of seconds, got ${value}\n`);
+  }
 });
