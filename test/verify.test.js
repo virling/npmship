@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
 import zlib from "node:zlib";
 import { test } from "node:test";
 import { REGISTRY, untar, verify } from "../src/verify.js";
@@ -38,6 +40,19 @@ test("reports files missing from the tarball", async () => {
   const result = await verify({ cwd: dir }, fakeDeps(deps));
   assert.equal(result.ok, false);
   assert.equal(result.checks.at(-1).detail, "missing from tarball: index.js");
+});
+test("removes the temp dir when npm pack fails", async () => {
+  const { dir } = repo();
+  let packDir;
+  const deps = fakeDeps({ ...good(), run: (cmd, args, cwd) => {
+    if (cmd === "npm") {
+      packDir = cwd;
+      throw new Error("pack failed");
+    }
+  } });
+  const result = await verify({ cwd: dir }, deps);
+  assert.equal(result.checks.at(-1).detail, "pack failed");
+  assert.equal(fs.existsSync(path.dirname(packDir)), false);
 });
 test("failed CI fails and does not wait for npm", async () => {
   const { dir } = repo();

@@ -26,14 +26,17 @@ export function untar(buf) {
 
 function packedFiles(tag, cwd, deps) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "npmship-"));
-  deps.run("git", ["archive", "--format=tar", "-o", path.join(dir, "src.tar"), tag], cwd);
-  for (const file of untar(fs.readFileSync(path.join(dir, "src.tar")))) {
-    fs.mkdirSync(path.join(dir, "src", path.dirname(file.name)), { recursive: true });
-    fs.writeFileSync(path.join(dir, "src", file.name), file.data);
+  try {
+    deps.run("git", ["archive", "--format=tar", "-o", path.join(dir, "src.tar"), tag], cwd);
+    for (const file of untar(fs.readFileSync(path.join(dir, "src.tar")))) {
+      fs.mkdirSync(path.join(dir, "src", path.dirname(file.name)), { recursive: true });
+      fs.writeFileSync(path.join(dir, "src", file.name), file.data);
+    }
+    const [pack] = JSON.parse(deps.run("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], path.join(dir, "src")));
+    return pack.files.map((f) => f.path);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
   }
-  const [pack] = JSON.parse(deps.run("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], path.join(dir, "src")));
-  fs.rmSync(dir, { recursive: true, force: true });
-  return pack.files.map((f) => f.path);
 }
 
 async function poll(check, { wait, timeout, interval }, deps) {
